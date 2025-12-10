@@ -111,7 +111,7 @@ public:
         // cout << occupiedCells << endl;
         // cout << capacity << endl;
         if(chechRehash >= 0.7){
-            cout << "rehashing work " << endl;
+           // cout << "rehashing work " << endl;
             rehashing() ;
         }
         int hash1 = h1(playerID) ;

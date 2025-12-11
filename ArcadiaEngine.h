@@ -12,7 +12,7 @@ using namespace std;
 class PlayerTable {
 public:
     // Use Double Hashing logic
-    virtual void insert(int playerID, string name) = 0; 
+    virtual void insert(int playerID, string name ) = 0; 
     virtual string search(int playerID) = 0;
 };
 

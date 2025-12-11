@@ -106,11 +106,11 @@ public:
     void insert(int playerID, string name) override {
         // TODO: Implement double hashing insert
         // Remember to handle collisions using h1(key) + i * h2(key)
-        double chechRehash = static_cast<double>(occupiedCells)/capacity ;
+        double checkRehash = static_cast<double>(occupiedCells)/capacity ;
         // cout << "occupied cells and capacity now " << endl; 
         // cout << occupiedCells << endl;
         // cout << capacity << endl;
-        if(chechRehash >= 0.7){
+        if(checkRehash >= 0.7){
            // cout << "rehashing work " << endl;
             rehashing() ;
         }
@@ -118,7 +118,7 @@ public:
         int hash2 = h2(playerID) ;
         int index = hash1 ;
         // cout << "After first call to h1 index = " << index << endl;
-        for (int i = 0; i < capacity; i++) {
+        for (int i = 0; i < capacity; i++) { //double hashing 
             int index = (hash1 + i * hash2) % capacity;
             
             if (!arr[index].occupied) {
@@ -181,20 +181,177 @@ public:
 };
 
 // --- 3. AuctionTree (Red-Black Tree) ---
-
+struct treeNode{
+    int id ;
+    int price ;
+    char color ;
+    treeNode* left ;
+    treeNode* right ;
+    treeNode* parent ;
+    treeNode(int id , int price){
+        this->id = id ;
+        this->price = price ;
+        color = 'R' ;
+        left = nullptr ;
+        right = nullptr ;
+        parent = nullptr ;
+    }
+    treeNode(){
+        color = 'R' ;
+        left = nullptr ;
+        right = nullptr ;
+        parent = nullptr ;
+    }
+};
 class ConcreteAuctionTree : public AuctionTree {
 private:
     // TODO: Define your Red-Black Tree node structure
     // Hint: Each node needs: id, price, color, left, right, parent pointers
+    treeNode* root ; 
+    int nodecount ;
+
+ protected:
+    void leftRotation(treeNode *x){
+        treeNode *p = x->parent ;
+        treeNode *c = x->right ;
+        treeNode *cc = c->left ;
+        c->left = x ;
+        x->parent = c ;
+        x->right = cc ;
+        if(cc != nullptr){
+            cc->parent = x ;
+        }
+        if(p == nullptr){
+            root = c ;
+        }
+        else {
+            if(x == p->right){
+               p->right = c ;
+            }
+            else{
+                p->left = c ;
+            }
+            c->parent = p ;
+        }
+    }
+    void rightRotation(treeNode *x){
+        treeNode *p = x->parent ;
+        treeNode *c = x->left ;
+        treeNode *cc = c->right ;
+        c->right = x ;
+        x->parent = c ;
+        x->left = cc ;
+        if(cc != nullptr){
+            cc->parent = x ;
+        }
+        if(p == nullptr){
+            root = c ;
+        }
+        else {
+            if(x == p->left){
+                p->left = c ;
+            }
+            else{
+                p->right = c ;
+            }
+            c->parent = p ;
+        }
+    }
+    void recolor(treeNode *node1 , treeNode *node2){
+        char c = node1->color ;
+        node1->color = node2->color ;
+        node2->color = c ;
+    }   
 
 public:
     ConcreteAuctionTree() {
         // TODO: Initialize your Red-Black Tree
+        root = nullptr ;
+        nodecount = 0 ;
     }
 
     void insertItem(int itemID, int price) override {
         // TODO: Implement Red-Black Tree insertion
         // Remember to maintain RB-Tree properties with rotations and recoloring
+        treeNode *newnode = new treeNode(itemID , price) ;
+        if(root == nullptr){
+            newnode->color = 'B' ;
+            root = newnode ;
+        }
+        else {
+        treeNode *pre = nullptr ;
+        treeNode *next = root ;
+        while(next != nullptr){
+            pre = next ;
+            if(newnode->price > next->price){
+                next = next->right ;
+            }
+            else {
+                next = next->left ;
+            }
+        }
+        if(newnode->price > pre->price){
+            pre->right = newnode ;
+        }
+        else{
+            pre->left = newnode ;
+        }
+        newnode->parent = pre ;
+        treeNode *curr = newnode ;
+        while(curr != root && curr->parent != nullptr &&curr->parent->color == 'R'){
+            treeNode *uncle ;
+            treeNode *parent = curr->parent ;
+            treeNode *gp = parent->parent ;
+            if(parent == gp->right){
+                uncle = gp->left ;
+            } 
+            else{
+                uncle = gp->right ;
+            }
+            if(uncle!= nullptr && uncle->color == 'R'){ // case 1 
+                parent->color = 'B' ;
+                uncle->color = 'B' ;
+                gp->color = 'R' ;
+                curr = gp ;
+                continue;
+            }
+            else {
+                if(parent == gp->right){
+                    if(curr == parent->left){
+                        rightRotation(parent) ;
+                        curr = parent ;
+                        parent = curr->parent ;
+                    }
+                    leftRotation(gp) ;
+                    recolor(parent , gp) ;
+                    break ;
+                }
+                else {
+                    if(curr == parent->right){
+                        leftRotation(parent) ;
+                        curr = parent ;
+                        parent = curr->parent ;
+                    }
+                    rightRotation(gp) ;
+                    recolor(parent, gp) ;
+                    break ;
+                }
+            }
+    }
+        }
+        root->color = 'B' ;
+        nodecount++ ;
+    }
+    void inorder(treeNode*n){
+        if(n == nullptr){
+            return ;
+        }
+        inorder(n->left) ;
+        cout << n->id << " " << n->price << " " << n->color << endl; 
+        inorder(n->right) ;
+    }
+    void display(){
+        inorder(root) ;
     }
 
     void deleteItem(int itemID) override {
@@ -289,30 +446,39 @@ extern "C" {
 
 int main()
 {
-    ConcretePlayerTable p ;
-    p.insert(1 , "seif") ;
-    p.insert(2 , "ezz") ;
-    p.insert(3 , "nour") ;
-    p.insert(8 , "anwar") ;
-    p.insert(7 , "vini") ;
-    p.insert(11 , "rodrigo") ;
-    p.insert(14 , "kama") ;
-    p.insert(5 , "jude") ;
-    p.insert(70 , "carvacal") ;
-   p.insert(22 , "abotrika") ;
-    p.insert(10 , "Mbappe") ;
-    cout << p.search(1) << endl ;
-    cout << p.search(2) << endl ;
-    cout << p.search(3) << endl ;
-    cout << p.search(8) << endl;
-    cout << p.search(7) << endl;
-    cout << p.search(11) << endl;
-    cout << p.search(14) << endl;
-    cout << p.search(5) << endl;
-    cout << p.search(300) << endl;
-    cout << p.search(70) << endl;
-    cout << p.search(22) << endl;
-    cout << p.search(10) << endl;
+//     ConcretePlayerTable p ;
+//     p.insert(11,"mosalah") ;
+//     p.insert(17 , "seif") ;
+//     p.insert(2 , "ezz") ;
+//     p.insert(3 , "nour") ;
+//     p.insert(18 , "anwar") ;
+//     p.insert(7 , "vini") ;
+//     p.insert(8 , "kroos") ;
+//     p.insert(14 , "kama") ;
+//     p.insert(5 , "jude") ;
+//     p.insert(70 , "carvacal") ;
+//    p.insert(22 , "abotrika") ;
+//     p.insert(10 , "Mbappe") ;
+//     cout << p.search(11) << endl;
+//     cout << p.search(17) << endl ;
+//     cout << p.search(2) << endl ;
+//     cout << p.search(3) << endl ;
+//     cout << p.search(18) << endl;
+//     cout << p.search(7) << endl;
+//     cout << p.search(8) << endl;
+//     cout << p.search(14) << endl;
+//     cout << p.search(5) << endl;
+//     cout << p.search(300) << endl;
+//     cout << p.search(70) << endl;
+//     cout << p.search(22) << endl;
+//     cout << p.search(10) << endl;
+ConcreteAuctionTree t ;
+t.insertItem(1,20) ;
+t.insertItem(2,30) ;
+t.insertItem(3,5) ;
+t.insertItem(7,10) ;
+t.display() ;
+
 
     
 

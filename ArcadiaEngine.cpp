@@ -477,6 +477,7 @@ t.insertItem(1,20) ;
 t.insertItem(2,30) ;
 t.insertItem(3,5) ;
 t.insertItem(7,10) ;
+t.insertItem(7,15) ;
 t.display() ;
 
 

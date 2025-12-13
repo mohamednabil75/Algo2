@@ -1,45 +1,75 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-bool LootSplit( int nums[], int size,int target) {
-    int size2=(int)pow(2,size);
-    int vec[size2+1]={0};
-    vec[0]=0;
-    cout<<vec[1]<<endl;
-    for(int i=0;i<size;i++){
-        int gap=pow(2,i);
-        for(int j=gap;j<gap*2;j++){
-            vec[j]+=nums[i]+vec[j-gap];
-            // cout<<j<<"     "<<vec[j]<<endl;
+
+class InventorySystem{
+    public:
+    bool optimizeLootSplit(int n, vector<int>& coins);
+    int maximizeCarryValue(int capacity, vector<pair<int, int>>& items);
+    long long countStringPossibilities(string s);
+
+};
+bool InventorySystem::optimizeLootSplit(int n, vector<int>& coins) {
+    vector<bool>vec(n+1,false);
+    vec[0]=true;
+    for (int x :coins){
+        for (int i=n;i>=x;i--){
+            vec[i]= vec[i]||vec[i-x];
         }
     }
+    return vec[n];
 
-    for (int i=0;i<size2;i++){
-        if(vec[i]==target)return true;
-        // cout<<vec[i]<<" ";
     }
-    cout<<endl;
-    return false;  
+    
+
+
+int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int>>& items) {
+    // TODO: Implement 0/1 Knapsack using DP
+    // items = {weight, value} pairs
+    // Return maximum value achievable within capacity
+    return 0;
 }
 
 
+long long InventorySystem:: countStringPossibilities(string s) {
+    int n = s.size();
+
+    vector<long long> dp(n + 1, 0);
+    dp[0] = 1;  
+    dp[1] = 1;  
+
+    for (int i = 2; i <= n; i++) {
+        dp[i] = dp[i - 1]; 
+
+        if ((s[i - 1] == 'u' && s[i - 2] == 'u') ||
+            (s[i - 1] == 'n' && s[i - 2] == 'n')) {
+            dp[i] = (dp[i] + dp[i - 2]) ;
+        }
+    }
+
+    return dp[n];
+}
+
 
 int main() {
+    InventorySystem system;
     int size;
     // cin>>size;
     size=5;
     // int vec[size];
-    int vec[size]={5,1,11,5,12};
+    vector<int>vec={5,1,11,5};
 
     // for(int i=0;i<size;i++)cin>>vec[i];
     int sum=0;
     for(int x :vec)sum+=x;
     if(sum%2==1)cout<<"No"<<endl;
-    else if(LootSplit(vec,size,sum/2)){
+    else if(system.optimizeLootSplit(sum/2,vec)){
         cout<<"yes"<<endl;
     }
     else{
         cout<<"No"<<endl;
     }
+    int output=system.countStringPossibilities("suuunn");
+    cout<<output<<endl;
 
 }

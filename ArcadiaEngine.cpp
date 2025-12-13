@@ -303,43 +303,91 @@ private:
         cout << n->id << " " << n->price << " " << n->color << endl; 
         inorder(n->right) ;
     }
-    // void fixDeletion(treeNode *x){
-    //     if(x->color == 'B'){
-    //         treeNode *lc = x->left ;
-    //         treeNode *rc = x->right ;
-    //         if(lc == nullptr && rc == nullptr){// case of double black
-    //             treeNode *sib = nullptr ;
-    //             treeNode *p = x->parent ;
-    //             if(x = p->left){
-    //                 sib = p->right ;
-    //             }
-    //             else{
-    //                 sib = p->left ;
-    //             }
-    //             while(sib != root){
-    //                 if(sib->color = 'R'){
-    //                     recolor(sib , p) ;
-    //                     sib = p ;
-    //                     p = sib->parent ; 
-    //                 }
+    treeNode* getSibling(treeNode *x){
+        treeNode *sib = nullptr ;
+        treeNode *p = x->parent ;
+        if(p == nullptr){
+            return nullptr ;
+        }
+        if(x = p->left){
+            sib = p->right ;
+        }
+        else{
+            sib = p->left ;
+        }
+        return sib ;
+    }
+    
+    void fixDeletion(treeNode* x, treeNode* xparent) {
+    while ((x == nullptr || x->color == 'B') && xparent != nullptr) {
 
-    //         }
-                
-    //         } 
-    //         else if(rc == nullptr){
-    //             if(lc->color == 'R'){
-    //                 lc->color = 'B' ;
-    //             }
-    //         }
-    //         else if(lc == nullptr){
-    //             if(rc->color == 'R'){
-    //                 rc->color = 'B' ;
-    //             }
-    //         }//in case of the target deleted node has two child i put in parameter of that function the predecessor which have one child
+        treeNode* sib;
+        if (x == xparent->left)
+            sib = xparent->right;
+        else
+            sib = xparent->left;
 
-    //     }
+        if (sib != nullptr && sib->color == 'R') {
+            sib->color = 'B';
+            xparent->color = 'R';
 
-    // }
+            if (x == xparent->left){
+                leftRotation(xparent);
+            }
+            else{
+                rightRotation(xparent);
+            }
+
+            if (x == xparent->left)
+                sib = xparent->right;
+            else
+                sib = xparent->left;
+        }
+        bool allblack =
+            (sib == nullptr ||
+             ((sib->left == nullptr || sib->left->color == 'B') &&
+              (sib->right == nullptr || sib->right->color == 'B')));
+
+        if (allblack) {
+            if (sib != nullptr){
+                 sib->color = 'R';}
+            x = xparent;
+            xparent = xparent->parent;
+            continue;
+        }
+
+        if (x == xparent->left) {
+            if (sib->right == nullptr || sib->right->color == 'B') {
+                if (sib->left) sib->left->color = 'B';
+                sib->color = 'R';
+                rightRotation(sib);
+                sib = xparent->right;
+            }
+
+            sib->color = xparent->color;
+            xparent->color = 'B';
+            if (sib->right) sib->right->color = 'B';
+            leftRotation(xparent);
+        } else {
+            if (sib->left == nullptr || sib->left->color == 'B') {
+                if (sib->right) sib->right->color = 'B';
+                sib->color = 'R';
+                leftRotation(sib);
+                sib = xparent->left;
+            }
+
+            sib->color = xparent->color;
+            xparent->color = 'B';
+            if (sib->left) sib->left->color = 'B';
+            rightRotation(xparent);
+        }
+        break;
+    }
+
+    if (x != nullptr)
+        x->color = 'B';
+}
+
 
 
 
@@ -426,99 +474,127 @@ public:
         inorder(root) ;
     }
 
-    void deleteItem(int itemID) override {
-        // TODO: Implement Red-Black Tree deletion
-        // This is complex - handle all cases carefully
-        if(root == nullptr){
-            cout << "Tree is empty !" << endl;
-            return ;
-        }
-        treeNode* temp = root ;
-        treeNode *target = getNodeById(itemID ,temp) ;
-        if(target == nullptr){
-            cout << "ItemId doesn't exist !" << endl;
-            return ;
-        }
-        treeNode *lc = target->left ;
-        treeNode *rc = target->right ;
-        treeNode *p = target->parent ;
-        if(nodecount == 1){
-            root = nullptr ;
-            delete target;
-            nodecount--;
-            return;
-        }
-        if(lc == nullptr && rc == nullptr){
-            if(target == p->left){
-                p->left = nullptr ;
-            }
-            else {
-                p->right = nullptr ;
-            }
-            delete target ;
-        }
-        else if(rc == nullptr){
-            if(target == root){
-                root = lc ;
-                lc->parent = nullptr ;
-                delete target ;
-                nodecount--;
-                return ;
-            }
-            if(target == p->left){
-                p->left = lc ;
-            }
-            else{
-                p->right = lc ;
-            }
-            lc->parent = p ;
-            delete target ;
-        }
-        else if(lc == nullptr){
-            if(target == root){
-                root = rc ;
-                rc->parent =nullptr ;
-                delete target ;
-                nodecount--;
-                return ;
-            }
-            if(target == p->left){
-                p->left = rc ;
-            }
-            else{
-                p->right = rc ;
-            }
-            rc->parent = p ;
-            delete target ;
-        }
-        else{
-            treeNode *pd = predecessor(target) ;
-            treeNode *pdLeftChild = pd->left ;
-            target->id = pd->id ;
-            target->price = pd->price ;
-            if(pdLeftChild){
-                if(pd->parent != target){
-                    pd->parent->right = pdLeftChild ;
-                    pdLeftChild->parent = pd->parent ;
-                }
-                else {
-                    target->left = pdLeftChild ;
-                    pdLeftChild->parent = target ;
-                }  
-            }
-            else{
-                if(pd->parent != target){
-                    pd->parent->right = nullptr ;
-                }
-                else{
-                    target->left = nullptr ;
-                }
-            }
-            delete pd ;
-        } 
-        nodecount-- ; 
-}
+void deleteItem(int itemID) override {
+    if (root == nullptr) {
+        cout << "Tree is empty !" << endl;
+        return;
+    }
 
+    treeNode* target = getNodeById(itemID, root);
+    if (target == nullptr) {
+        cout << "ItemId doesn't exist !" << endl;
+        return;
+    }
+
+    treeNode* y = target;
+    char originalColor = y->color;
+    treeNode* x = nullptr;
+    treeNode *xparent = nullptr ;
+
+    if (nodecount == 1) {
+        root = nullptr;
+        delete target;
+        nodecount--;
+        return;
+    }
+    if (target->left == nullptr && target->right == nullptr) {
+        x = nullptr;
+
+        if (target == root) {
+            root = nullptr;
+        } else if (target == target->parent->left) {
+            target->parent->left = nullptr;
+        } else {
+            target->parent->right = nullptr;
+        }
+        xparent = target->parent ;
+
+        delete target;
+    }
+    else if (target->right == nullptr) {
+        x = target->left;
+
+        if (target == root) {
+            root = x;
+            x->parent = nullptr;
+            xparent = nullptr;
+        } else if (target == target->parent->left) {
+            target->parent->left = x;
+            x->parent = target->parent;
+            xparent = target->parent;
+        } else {
+            target->parent->right = x;
+            x->parent = target->parent;
+            xparent = target->parent;
+        }
+
+        delete target;
+    }
+    else if (target->left == nullptr) {
+        x = target->right;
+
+        if (target == root) {
+            root = x;
+            x->parent = nullptr;
+            xparent = nullptr;
+        } else if (target == target->parent->left) {
+            target->parent->left = x;
+            x->parent = target->parent;
+            xparent = target->parent;
+        } else {
+            target->parent->right = x;
+            x->parent = target->parent;
+            xparent = target->parent;
+        }
+
+        delete target;
+    }
+    else {
+        y = predecessor(target);
+        originalColor = y->color;
+        x = y->left;
+        xparent = y ;
+        target->id = y->id;
+        target->price = y->price;
+        // cout << "y->price = "<<y->price << endl;
+        // cout << "target->price = "<<target->price << endl;
+        // cout << "target->parent->price = "<<target->parent->price << endl;
+        
+
+        if (y->parent != target) {
+            if (x != nullptr){ 
+                x->parent = y->parent;
+                y->parent->right = x;
+                xparent = y->parent ;
+            }
+            else{
+                xparent = y->parent ;
+            }
+            //cout << "y->parent->price = " <<y->parent->price << endl;
+        } 
+        else {
+            target->left = x;
+            if (x != nullptr){ 
+                x->parent = target;
+                xparent = target ;
+            }
+            else{
+                xparent = target ;
+            }
+        }
+
+        delete y;
+    }
+
+    nodecount--;
+    if (originalColor == 'B') {
+        fixDeletion(x,xparent);
+    }
+
+    if (root != nullptr) {
+        root->color = 'B';
+    }
+}
 };
 
 // =========================================================
@@ -638,7 +714,13 @@ t.insertItem(1,20) ;
 t.insertItem(2,30) ;
 t.insertItem(3,5) ;
 t.insertItem(7,10) ;
-t.insertItem(7,15) ;
+t.insertItem(8,15) ;
+t.insertItem(18,40) ;
+t.insertItem(13,19) ;
+t.insertItem(9,3) ;
+t.insertItem(11,17) ;
+t.insertItem(16,8) ;
+t.deleteItem(7) ;
 t.display() ;
 
 

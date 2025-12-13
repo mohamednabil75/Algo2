@@ -98,8 +98,8 @@ protected:
     }
 public:
     ConcretePlayerTable() {
-        arr = new hashcell[10] ;
-        capacity = 10 ;
+        arr = new hashcell[101] ;
+        capacity = 101 ;
         occupiedCells = 0 ;
         // TODO: Initialize your hash table
     }
@@ -126,7 +126,7 @@ public:
                 arr[index].value = name;
                 arr[index].occupied = true;
                 occupiedCells++;
-               // cout << "Player " << name << " inserted successfully :) at index " << index << endl;
+               cout << "Player " << name << " inserted successfully :) at index " << index << endl;
                 return;
             }
         }
@@ -258,10 +258,90 @@ private:
         }
     }
     void recolor(treeNode *node1 , treeNode *node2){
+        if(node1->color == node2->color){
+            char c = node1->color ;
+            c = (c == 'R') ? c = 'B' : c = 'R' ;
+            node1->color = c ;
+            node2->color = c ;
+            return ;
+        }
         char c = node1->color ;
         node1->color = node2->color ;
         node2->color = c ;
-    }   
+    }
+    treeNode* predecessor(treeNode *n){
+        treeNode *target = nullptr ;
+        treeNode *pretarget = n->left ;
+        while(pretarget != nullptr){
+            target = pretarget ;
+            pretarget = pretarget->right ;
+        }
+        return target ;
+    }
+    treeNode* getNodeById(int id , treeNode* n){ // linear search 
+        if(n == nullptr){
+            return nullptr ;
+        }
+        if(n->id == id){
+            return n ;
+        }
+        treeNode*l = getNodeById(id , n->left) ;
+        if(l != nullptr){
+            return l ;
+        }
+        treeNode *r = getNodeById(id , n->right) ;
+        if(r != nullptr){
+            return r ;
+        }
+        return nullptr ;
+    }
+    void inorder(treeNode*n){
+        if(n == nullptr){
+            return ;
+        }
+        inorder(n->left) ;
+        cout << n->id << " " << n->price << " " << n->color << endl; 
+        inorder(n->right) ;
+    }
+    // void fixDeletion(treeNode *x){
+    //     if(x->color == 'B'){
+    //         treeNode *lc = x->left ;
+    //         treeNode *rc = x->right ;
+    //         if(lc == nullptr && rc == nullptr){// case of double black
+    //             treeNode *sib = nullptr ;
+    //             treeNode *p = x->parent ;
+    //             if(x = p->left){
+    //                 sib = p->right ;
+    //             }
+    //             else{
+    //                 sib = p->left ;
+    //             }
+    //             while(sib != root){
+    //                 if(sib->color = 'R'){
+    //                     recolor(sib , p) ;
+    //                     sib = p ;
+    //                     p = sib->parent ; 
+    //                 }
+
+    //         }
+                
+    //         } 
+    //         else if(rc == nullptr){
+    //             if(lc->color == 'R'){
+    //                 lc->color = 'B' ;
+    //             }
+    //         }
+    //         else if(lc == nullptr){
+    //             if(rc->color == 'R'){
+    //                 rc->color = 'B' ;
+    //             }
+    //         }//in case of the target deleted node has two child i put in parameter of that function the predecessor which have one child
+
+    //     }
+
+    // }
+
+
 
 public:
     ConcreteAuctionTree() {
@@ -342,14 +422,6 @@ public:
         root->color = 'B' ;
         nodecount++ ;
     }
-    void inorder(treeNode*n){
-        if(n == nullptr){
-            return ;
-        }
-        inorder(n->left) ;
-        cout << n->id << " " << n->price << " " << n->color << endl; 
-        inorder(n->right) ;
-    }
     void display(){
         inorder(root) ;
     }
@@ -357,7 +429,96 @@ public:
     void deleteItem(int itemID) override {
         // TODO: Implement Red-Black Tree deletion
         // This is complex - handle all cases carefully
-    }
+        if(root == nullptr){
+            cout << "Tree is empty !" << endl;
+            return ;
+        }
+        treeNode* temp = root ;
+        treeNode *target = getNodeById(itemID ,temp) ;
+        if(target == nullptr){
+            cout << "ItemId doesn't exist !" << endl;
+            return ;
+        }
+        treeNode *lc = target->left ;
+        treeNode *rc = target->right ;
+        treeNode *p = target->parent ;
+        if(nodecount == 1){
+            root = nullptr ;
+            delete target;
+            nodecount--;
+            return;
+        }
+        if(lc == nullptr && rc == nullptr){
+            if(target == p->left){
+                p->left = nullptr ;
+            }
+            else {
+                p->right = nullptr ;
+            }
+            delete target ;
+        }
+        else if(rc == nullptr){
+            if(target == root){
+                root = lc ;
+                lc->parent = nullptr ;
+                delete target ;
+                nodecount--;
+                return ;
+            }
+            if(target == p->left){
+                p->left = lc ;
+            }
+            else{
+                p->right = lc ;
+            }
+            lc->parent = p ;
+            delete target ;
+        }
+        else if(lc == nullptr){
+            if(target == root){
+                root = rc ;
+                rc->parent =nullptr ;
+                delete target ;
+                nodecount--;
+                return ;
+            }
+            if(target == p->left){
+                p->left = rc ;
+            }
+            else{
+                p->right = rc ;
+            }
+            rc->parent = p ;
+            delete target ;
+        }
+        else{
+            treeNode *pd = predecessor(target) ;
+            treeNode *pdLeftChild = pd->left ;
+            target->id = pd->id ;
+            target->price = pd->price ;
+            if(pdLeftChild){
+                if(pd->parent != target){
+                    pd->parent->right = pdLeftChild ;
+                    pdLeftChild->parent = pd->parent ;
+                }
+                else {
+                    target->left = pdLeftChild ;
+                    pdLeftChild->parent = target ;
+                }  
+            }
+            else{
+                if(pd->parent != target){
+                    pd->parent->right = nullptr ;
+                }
+                else{
+                    target->left = nullptr ;
+                }
+            }
+            delete pd ;
+        } 
+        nodecount-- ; 
+}
+
 };
 
 // =========================================================

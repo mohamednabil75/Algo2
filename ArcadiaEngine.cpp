@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <queue>
 #include <numeric>
+#include<time.h>
 #include <climits>
 #include <cmath>
 #include <cstdlib>
@@ -65,37 +66,37 @@ protected:
         }
         return final ;
     }
-    void rehashInsertion(int playerId , string & name){
-        int hash1 = h1(playerId) ;
-        int hash2 = h2(playerId) ;
-        int index = hash1 ;
-        // cout << "After first call to h1 index = " << index << endl;
-        for (int i = 0; i < capacity; i++) {
-            int index = (hash1 + i * hash2) % capacity;
+    // void rehashInsertion(int playerId , string & name){
+    //     int hash1 = h1(playerId) ;
+    //     int hash2 = h2(playerId) ;
+    //     int index = hash1 ;
+    //     // cout << "After first call to h1 index = " << index << endl;
+    //     for (int i = 0; i < capacity; i++) {
+    //         int index = (hash1 + i * hash2) % capacity;
             
-            if (!arr[index].occupied) {
-                arr[index].key = playerId;
-                arr[index].value = name;
-                arr[index].occupied = true;
-                occupiedCells++;
-                return;
-            }
-        }
+    //         if (!arr[index].occupied) {
+    //             arr[index].key = playerId;
+    //             arr[index].value = name;
+    //             arr[index].occupied = true;
+    //             occupiedCells++;
+    //             return;
+    //         }
+    //     }
 
-    }
-    void rehashing(){
-        hashcell* oldarr = arr ;
-        int oldSz = capacity ;
-        capacity*=2 ;
-        arr = new hashcell[capacity] ;
-        occupiedCells = 0 ;
-        for(int i = 0 ; i < oldSz ;i++){
-            if(oldarr[i].occupied){
-            rehashInsertion(oldarr[i].key , oldarr[i].value) ;
-            }
-        }
-        delete[] oldarr ;
-    }
+    // }
+    // void rehashing(){
+    //     hashcell* oldarr = arr ;
+    //     int oldSz = capacity ;
+    //     capacity*=2 ;
+    //     arr = new hashcell[capacity] ;
+    //     occupiedCells = 0 ;
+    //     for(int i = 0 ; i < oldSz ;i++){
+    //         if(oldarr[i].occupied){
+    //         rehashInsertion(oldarr[i].key , oldarr[i].value) ;
+    //         }
+    //     }
+    //     delete[] oldarr ;
+    // }
 public:
     ConcretePlayerTable() {
         arr = new hashcell[101] ;
@@ -106,13 +107,17 @@ public:
     void insert(int playerID, string name) override {
         // TODO: Implement double hashing insert
         // Remember to handle collisions using h1(key) + i * h2(key)
-        double checkRehash = static_cast<double>(occupiedCells)/capacity ;
+        //double checkRehash = static_cast<double>(occupiedCells)/capacity ;
         // cout << "occupied cells and capacity now " << endl; 
         // cout << occupiedCells << endl;
         // cout << capacity << endl;
-        if(checkRehash >= 0.7){
-           // cout << "rehashing work " << endl;
-            rehashing() ;
+        // if(checkRehash >= 0.7){
+        //    // cout << "rehashing work " << endl;
+        //     rehashing() ;
+        // }
+        if(occupiedCells == capacity){
+            cout << "Table is full!" << endl;
+            return ;
         }
         int hash1 = h1(playerID) ;
         int hash2 = h2(playerID) ;
@@ -159,29 +164,168 @@ class ConcreteLeaderboard : public Leaderboard {
 private:
     // TODO: Define your skip list node structure and necessary variables
     // Hint: You'll need nodes with multiple forward pointers
+    struct node {
+        int id;
+        int score;
+        vector<node*> next;
+        node(int id, int score, int level) : 
+            id(id), score(score), next(level + 1, nullptr) {}
+    };
+    node* head ;
+    const int max = 20 ;
+    int currentMaxLevel ;
+    int blocknum ;
 
+protected:
+    int getrandomlevel(){
+        int level = 0 ;
+        while(rand() % 2  == 0 && level < max ){
+            level++ ;
+        }
+        return level ;
+    }
+    node* searchByScore(int score){
+        node* curr = head ;
+        for(int i = currentMaxLevel ; i >=0 ;i--){
+            while(curr->next[i] !=nullptr && score > curr->next[i]->score){
+                curr = curr->next[i] ;
+            }
+        }
+        curr = curr->next[0] ;
+        if(curr != nullptr && curr->score == score){
+            return curr ;
+        }
+        return nullptr ;
+    }
+    node* searchById(int id){ // that linear search due to skip list not ordered by id 
+        node *curr = head->next[0] ;
+        while(curr !=nullptr && curr->id != id){
+            curr = curr->next[0] ;
+        }
+        return curr ;
+
+    }
 public:
     ConcreteLeaderboard() {
         // TODO: Initialize your skip list
+        currentMaxLevel = 0 ;
+        head = new node(-1 , -1000 , max) ;
+        blocknum = 0 ;
+        srand(time(0)) ;
+    }
+    ~ConcreteLeaderboard() {
+        node* curr = head->next[0];
+        while (curr != nullptr) {
+            node* temp = curr;
+            curr = curr->next[0];
+            delete temp;
+        }
+        delete head;
     }
 
     void addScore(int playerID, int score) override {
         // TODO: Implement skip list insertion
         // Remember to maintain descending order by score
+        node*checkid = searchById(playerID);
+        if(checkid != nullptr){
+            cout << playerID << " already exists !" << endl;
+            return ;
+        }
+        vector<node*> path(max+1 ,nullptr) ;
+        node* curr = head ;
+        node* checkDup = searchByScore(score) ;
+        if(checkDup != nullptr && checkDup->id == playerID){
+            cout << "Player already exist " << endl;
+            return ;
+        }
+        for(int i = currentMaxLevel ; i >=0 ;i--){
+            while(curr->next[i] != nullptr && (curr->next[i]->score > score || (curr->next[i]->score == score&& curr->next[i]->id < playerID ))){
+                curr = curr->next[i] ;
+            }
+            path[i] = curr ;
+        }
+        curr = curr->next[0] ;
+        int level = getrandomlevel() ;
+        if(level > currentMaxLevel){
+            for(int i = currentMaxLevel+1 ; i <= level ;i++){
+                path[i] = head ;
+            }
+            this->currentMaxLevel = level ;
+        }
+        node* insertedBlock = new node(playerID,score ,level) ;
+        for(int i = 0 ; i <= level ;i++){
+            insertedBlock->next[i] = path[i]->next[i] ;
+            path[i]->next[i] = insertedBlock ;
+        }
+        blocknum++ ;
+
     }
 
-    void removePlayer(int playerID) override {
-        // TODO: Implement skip list deletion
+void removePlayer(int playerID) override {
+    node* target = searchById(playerID);
+    if (target == nullptr) {
+        cout << "Player not found!" << endl;
+        return;
+    }
+    int score = target->score;
+    int id = target->id; 
+    node* curr = head;
+    int targetHeight = target->next.size() - 1; // to limit the search area according to the number of next pointer of target deleted node 
+    vector<node*> path(targetHeight + 1, nullptr);
+    for (int i = targetHeight; i >= 0; i--) {
+        while (curr->next[i] != nullptr && 
+               (curr->next[i]->score > score || 
+                (curr->next[i]->score == score && curr->next[i]->id < id))) {
+            curr = curr->next[i];
+        }
+        path[i] = curr;
+    }
+    for (int i = 0; i <= targetHeight; i++) {
+        if (path[i]->next[i] == target) {
+            path[i]->next[i] = target->next[i];
+        }
+    }
+    while (currentMaxLevel > 0 && head->next[currentMaxLevel] == nullptr) { // that in case the deleted node is the heighest block we update currentmax level
+        currentMaxLevel--;
+    }
+    
+    delete target;
+    blocknum--;
+}
+    void display(){
+        for(int i = currentMaxLevel ; i >=0 ; i--){
+            node *temp =head->next[i] ;
+            while(temp!= nullptr){
+                cout << "Level " << i << " " << temp->id << ":" << temp->score << "        " ;
+                temp = temp->next[i] ;          
+            }
+            cout << endl;
+        }
     }
 
     vector<int> getTopN(int n) override {
         // TODO: Return top N player IDs in descending score order
-        return {};
+        vector<int> v ;
+        node*temp = head->next[0] ;
+        for(int i = 0 ; i < n ; i++){
+            if(temp == nullptr){
+                cout << "list not big enough !" << endl;
+                return {} ;
+            }
+            v.push_back(temp->id) ;
+            temp = temp->next[0] ;
+        }
+        return v ;
+
     }
 };
 
 // --- 3. AuctionTree (Red-Black Tree) ---
-struct treeNode{
+class ConcreteAuctionTree : public AuctionTree {
+private:
+    // TODO: Define your Red-Black Tree node structure
+    // Hint: Each node needs: id, price, color, left, right, parent pointers
+    struct treeNode{
     int id ;
     int price ;
     char color ;
@@ -203,10 +347,6 @@ struct treeNode{
         parent = nullptr ;
     }
 };
-class ConcreteAuctionTree : public AuctionTree {
-private:
-    // TODO: Define your Red-Black Tree node structure
-    // Hint: Each node needs: id, price, color, left, right, parent pointers
     treeNode* root ; 
     int nodecount ;
 
@@ -350,7 +490,8 @@ private:
 
         if (allblack) {
             if (sib != nullptr){
-                 sib->color = 'R';}
+                 sib->color = 'R';
+            }
             x = xparent;
             xparent = xparent->parent;
             continue;
@@ -358,7 +499,9 @@ private:
 
         if (x == xparent->left) {
             if (sib->right == nullptr || sib->right->color == 'B') {
-                if (sib->left) sib->left->color = 'B';
+                if (sib->left!=nullptr){
+                 sib->left->color = 'B';
+                }
                 sib->color = 'R';
                 rightRotation(sib);
                 sib = xparent->right;
@@ -366,11 +509,16 @@ private:
 
             sib->color = xparent->color;
             xparent->color = 'B';
-            if (sib->right) sib->right->color = 'B';
+            if (sib->right != nullptr) {
+                sib->right->color = 'B';
+            }
             leftRotation(xparent);
-        } else {
+        } 
+        else {
             if (sib->left == nullptr || sib->left->color == 'B') {
-                if (sib->right) sib->right->color = 'B';
+                if (sib->right != nullptr){
+                    sib->right->color = 'B';
+                } 
                 sib->color = 'R';
                 leftRotation(sib);
                 sib = xparent->left;
@@ -378,7 +526,9 @@ private:
 
             sib->color = xparent->color;
             xparent->color = 'B';
-            if (sib->left) sib->left->color = 'B';
+            if (sib->left != nullptr) {
+                sib->left->color = 'B';
+            }
             rightRotation(xparent);
         }
         break;
@@ -401,6 +551,11 @@ public:
     void insertItem(int itemID, int price) override {
         // TODO: Implement Red-Black Tree insertion
         // Remember to maintain RB-Tree properties with rotations and recoloring
+        treeNode* check = getNodeById(itemID, root) ;
+        if(check != nullptr && check->price == price){
+            cout << "Item " << check->id << " : " << check->price <<" already exists !" << endl;
+            return ;
+        }
         treeNode *newnode = new treeNode(itemID , price) ;
         if(root == nullptr){
             newnode->color = 'B' ;
@@ -471,130 +626,100 @@ public:
         nodecount++ ;
     }
     void display(){
+        if(root == nullptr){
+            cout << "Tree is empty !" << endl; 
+            return ;
+        }
         inorder(root) ;
     }
 
 void deleteItem(int itemID) override {
     if (root == nullptr) {
-        cout << "Tree is empty !" << endl;
+        cout << "Tree is empty!" << endl;
         return;
     }
-
     treeNode* target = getNodeById(itemID, root);
     if (target == nullptr) {
-        cout << "ItemId doesn't exist !" << endl;
+        cout << "Item " << itemID << " doesn't exist!" << endl;
         return;
     }
 
-    treeNode* y = target;
+    treeNode* y = target;      
+    treeNode* x = nullptr;    
+    treeNode* xparent = nullptr;
     char originalColor = y->color;
-    treeNode* x = nullptr;
-    treeNode *xparent = nullptr ;
 
-    if (nodecount == 1) {
-        root = nullptr;
-        delete target;
-        nodecount--;
-        return;
-    }
     if (target->left == nullptr && target->right == nullptr) {
-        x = nullptr;
-
         if (target == root) {
             root = nullptr;
-        } else if (target == target->parent->left) {
-            target->parent->left = nullptr;
         } else {
-            target->parent->right = nullptr;
+            xparent = target->parent; 
+            if (target == target->parent->left) {
+                target->parent->left = nullptr;
+            } else {
+                target->parent->right = nullptr;
+            }
         }
-        xparent = target->parent ;
-
         delete target;
+        nodecount--;
+        if (originalColor == 'B') {
+            fixDeletion(nullptr, xparent);
+        }
+        return;
     }
-    else if (target->right == nullptr) {
-        x = target->left;
+    if (target->left == nullptr || target->right == nullptr) {
+        x = (target->left != nullptr) ? target->left : target->right;
+        xparent = target->parent;
 
         if (target == root) {
             root = x;
-            x->parent = nullptr;
-            xparent = nullptr;
-        } else if (target == target->parent->left) {
-            target->parent->left = x;
-            x->parent = target->parent;
-            xparent = target->parent;
+            if (x != nullptr) x->parent = nullptr;
         } else {
-            target->parent->right = x;
-            x->parent = target->parent;
-            xparent = target->parent;
+            if (target == target->parent->left) {
+                target->parent->left = x;
+            } else {
+                target->parent->right = x;
+            }
+            if (x != nullptr) x->parent = target->parent;
         }
 
         delete target;
-    }
-    else if (target->left == nullptr) {
-        x = target->right;
-
-        if (target == root) {
-            root = x;
-            x->parent = nullptr;
-            xparent = nullptr;
-        } else if (target == target->parent->left) {
-            target->parent->left = x;
-            x->parent = target->parent;
-            xparent = target->parent;
-        } else {
-            target->parent->right = x;
-            x->parent = target->parent;
-            xparent = target->parent;
-        }
-
-        delete target;
-    }
-    else {
-        y = predecessor(target);
-        originalColor = y->color;
-        x = y->left;
-        xparent = y ;
-        target->id = y->id;
-        target->price = y->price;
-        // cout << "y->price = "<<y->price << endl;
-        // cout << "target->price = "<<target->price << endl;
-        // cout << "target->parent->price = "<<target->parent->price << endl;
+        nodecount--;
         
-
-        if (y->parent != target) {
-            if (x != nullptr){ 
-                x->parent = y->parent;
-                y->parent->right = x;
-                xparent = y->parent ;
-            }
-            else{
-                xparent = y->parent ;
-            }
-            //cout << "y->parent->price = " <<y->parent->price << endl;
-        } 
-        else {
-            target->left = x;
-            if (x != nullptr){ 
-                x->parent = target;
-                xparent = target ;
-            }
-            else{
-                xparent = target ;
+        if (originalColor == 'B') {
+            if (x == nullptr) {
+                fixDeletion(nullptr, xparent);
+            } else {
+                fixDeletion(x, xparent);
             }
         }
-
-        delete y;
+        return;
     }
+    y = predecessor(target);
+    originalColor = y->color;
+    x = y->left;
+    if (y->parent == target) {
+        xparent = y;
+        target->left = x;
+        if (x != nullptr) {
 
+            x->parent = target;
+        }
+    } 
+    else {
+        xparent = y->parent;
+        y->parent->right = x; 
+        if (x != nullptr) x->parent = y->parent;
+    }
+    target->id = y->id;
+    target->price = y->price;
+    delete y;
     nodecount--;
     if (originalColor == 'B') {
-        fixDeletion(x,xparent);
-    }
-
-    if (root != nullptr) {
-        root->color = 'B';
+        fixDeletion(x, xparent);
     }
 }
+
 };
 
 // =========================================================
@@ -709,19 +834,48 @@ int main()
 //     cout << p.search(70) << endl;
 //     cout << p.search(22) << endl;
 //     cout << p.search(10) << endl;
-ConcreteAuctionTree t ;
-t.insertItem(1,20) ;
-t.insertItem(2,30) ;
-t.insertItem(3,5) ;
-t.insertItem(7,10) ;
-t.insertItem(8,15) ;
-t.insertItem(18,40) ;
-t.insertItem(13,19) ;
-t.insertItem(9,3) ;
-t.insertItem(11,17) ;
-t.insertItem(16,8) ;
-t.deleteItem(7) ;
-t.display() ;
+
+
+// ConcreteAuctionTree t ;
+// t.insertItem(1,20) ;
+// t.insertItem(2,30) ;
+// t.insertItem(3,5) ;
+// t.insertItem(7,10) ;
+// t.insertItem(8,15) ;
+// t.insertItem(18,40) ;
+// t.insertItem(13,19) ;
+// t.insertItem(9,3) ;
+// t.insertItem(11,17) ;
+// t.insertItem(16,8) ;
+// t.insertItem(1,20) ;
+// t.deleteItem(7) ;
+// t.deleteItem(1) ;
+// t.deleteItem(2) ;
+// t.deleteItem(18) ;
+// t.display() ;
+
+// ConcreteLeaderboard b ;
+// b.addScore(1,20) ;
+// b.addScore(2,30) ;
+// b.addScore(3,40) ;
+// b.addScore(4,50) ;
+// b.addScore(9,40) ;
+// b.addScore(17,90) ;
+// b.addScore(19,150) ;
+// b.addScore(24,120) ;
+
+// b.display() ;
+// vector<int>v = b.getTopN(7) ;
+// for(int i = 0 ; i < v.size() ;i++){
+//     cout << i+1 << " " << v[i] << endl;
+// }
+
+// b.removePlayer(19) ;
+// b.removePlayer(24) ;
+// b.removePlayer(1) ;
+// b.removePlayer(2) ;
+
+// b.display() ;
 
 
     

@@ -1,4 +1,5 @@
 #include <bits/stdc++.h>
+#include "src/IntventorySystem/InventoryPacker/InventoryPacker.h"
 using namespace std;
 
 
@@ -20,14 +21,10 @@ bool InventorySystem::optimizeLootSplit(int n, vector<int>& coins) {
     return vec[n];
 
     }
-    
-
 
 int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int>>& items) {
-    // TODO: Implement 0/1 Knapsack using DP
-    // items = {weight, value} pairs
-    // Return maximum value achievable within capacity
-    return 0;
+    InventoryPacker packer = InventoryPacker(capacity, items);
+    return packer.maximizeCarryValue();
 }
 
 
@@ -48,6 +45,10 @@ long long InventorySystem:: countStringPossibilities(string s) {
     }
 
     return dp[n];
+
+private:
+    
+
 }
 
 

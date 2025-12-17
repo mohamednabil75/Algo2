@@ -11,6 +11,7 @@ include(FetchContent)
 
 add_library(lib
     src/IntventorySystem/InventoryPacker/InventoryPacker.cpp
+    src/Navigator/TeleporterNetwork.cpp
 )
 
 target_include_directories(lib PRIVATE 
@@ -34,6 +35,7 @@ FetchContent_MakeAvailable(googletest)
 
 add_executable(runTests
     src/IntventorySystem/InventoryPacker/InventoryPacker.test.cpp
+    src/Navigator/TeleporterNetwork.test.cpp
 )
 
 target_link_libraries(runTests

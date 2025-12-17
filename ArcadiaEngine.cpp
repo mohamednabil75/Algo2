@@ -38,65 +38,16 @@ private:
     int capacity ;
     int occupiedCells ;
 protected:
-    int h1(int key) { // multiplication hash function
-        const double A = 0.6180339887; // this value of A i searched for it's the optimal value of A
-        double product = (double)key * A;
-        double fractional = product - int(product); 
-        return (int)(capacity * fractional);
+    int h1(int key) { 
+        int h = key%capacity ;
     }
-    int h2(int key){ // midsquare function 
-        long long keysquare = key*key ;
-        string k = to_string(keysquare) ;
-        int digitsTaken = to_string(capacity-1).length() ;
-        while(k.length() < digitsTaken*2){
-            k = "0" + k ;
-        }
-        int keySquareSz = k.length() ;
-        int st = (keySquareSz - digitsTaken)/2 ;
-        string finalKey = "" ;
-        int last = st+digitsTaken ;
-        do{
-            finalKey+= k[st] ;
-            st++ ;
-        }while(st < last);
-        
-        int final = stoi(finalKey)%capacity ;
-        if(final == 0){
+    int h2(int key){ 
+        int h = 51-(key%51) ;
+        if(key == 0){
             return 1 ;
         }
-        return final ;
+        return h ;
     }
-    // void rehashInsertion(int playerId , string & name){
-    //     int hash1 = h1(playerId) ;
-    //     int hash2 = h2(playerId) ;
-    //     int index = hash1 ;
-    //     // cout << "After first call to h1 index = " << index << endl;
-    //     for (int i = 0; i < capacity; i++) {
-    //         int index = (hash1 + i * hash2) % capacity;
-            
-    //         if (!arr[index].occupied) {
-    //             arr[index].key = playerId;
-    //             arr[index].value = name;
-    //             arr[index].occupied = true;
-    //             occupiedCells++;
-    //             return;
-    //         }
-    //     }
-
-    // }
-    // void rehashing(){
-    //     hashcell* oldarr = arr ;
-    //     int oldSz = capacity ;
-    //     capacity*=2 ;
-    //     arr = new hashcell[capacity] ;
-    //     occupiedCells = 0 ;
-    //     for(int i = 0 ; i < oldSz ;i++){
-    //         if(oldarr[i].occupied){
-    //         rehashInsertion(oldarr[i].key , oldarr[i].value) ;
-    //         }
-    //     }
-    //     delete[] oldarr ;
-    // }
 public:
     ConcretePlayerTable() {
         arr = new hashcell[101] ;
@@ -107,22 +58,12 @@ public:
     void insert(int playerID, string name) override {
         // TODO: Implement double hashing insert
         // Remember to handle collisions using h1(key) + i * h2(key)
-        //double checkRehash = static_cast<double>(occupiedCells)/capacity ;
-        // cout << "occupied cells and capacity now " << endl; 
-        // cout << occupiedCells << endl;
-        // cout << capacity << endl;
-        // if(checkRehash >= 0.7){
-        //    // cout << "rehashing work " << endl;
-        //     rehashing() ;
-        // }
         if(occupiedCells == capacity){
-            cout << "Table is full!" << endl;
+            __throw_overflow_error("table is full!") ;
             return ;
         }
         int hash1 = h1(playerID) ;
         int hash2 = h2(playerID) ;
-        int index = hash1 ;
-        // cout << "After first call to h1 index = " << index << endl;
         for (int i = 0; i < capacity; i++) { //double hashing 
             int index = (hash1 + i * hash2) % capacity;
             
@@ -131,7 +72,7 @@ public:
                 arr[index].value = name;
                 arr[index].occupied = true;
                 occupiedCells++;
-               cout << "Player " << name << " inserted successfully :) at index " << index << endl;
+               //cout << "Player " << name << " inserted successfully :) at index " << index << endl;
                 return;
             }
         }
@@ -821,6 +762,10 @@ int main()
 //     p.insert(70 , "carvacal") ;
 //    p.insert(22 , "abotrika") ;
 //     p.insert(10 , "Mbappe") ;
+//     p.insert(100 , "mohamed") ;
+//     p.insert(99 , "mahmoud") ;
+//     p.insert(88 , "sayed") ;
+//     p.insert(33 , "hady") ;
 //     cout << p.search(11) << endl;
 //     cout << p.search(17) << endl ;
 //     cout << p.search(2) << endl ;
@@ -834,6 +779,10 @@ int main()
 //     cout << p.search(70) << endl;
 //     cout << p.search(22) << endl;
 //     cout << p.search(10) << endl;
+//     cout << p.search(100) << endl;
+//     cout << p.search(99) << endl;
+//     cout << p.search(88) << endl;
+//     cout << p.search(33) << endl;
 
 
 // ConcreteAuctionTree t ;

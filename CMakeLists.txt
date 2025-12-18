@@ -12,13 +12,20 @@ include(FetchContent)
 add_library(lib
     src/IntventorySystem/InventoryPacker/InventoryPacker.cpp
     src/Navigator/TeleporterNetwork.cpp
+    src/ArcadiaEngine.cpp
+    src/LeaderBoard/LeaderBoard.h
+    src/AuctionTree/AuctionTree.h
+    src/PlayerTable/PlayerTable.h
+    src/IntventorySystem/InventorySystem.cpp
+    src/ServerKernel/ServerKernel.cpp
+    src/Navigator/WorldNavigator.cpp
 )
 
 target_include_directories(lib PRIVATE 
     ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 
-add_executable(ArcadiaEngine src/main.cpp)
+add_executable(ArcadiaEngine src/main_test_students.cpp)
 
 target_link_libraries(ArcadiaEngine PRIVATE lib)
 

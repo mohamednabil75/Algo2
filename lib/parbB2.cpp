@@ -1,5 +1,8 @@
-#include <bits/stdc++.h>
 #include "src/IntventorySystem/InventoryPacker/InventoryPacker.h"
+#include <vector>
+#include <string>
+#include <iostream>
+
 using namespace std;
 
 
@@ -10,6 +13,7 @@ class InventorySystem{
     long long countStringPossibilities(string s);
 
 };
+
 bool InventorySystem::optimizeLootSplit(int n, vector<int>& coins) {
     vector<bool>vec(n+1,false);
     vec[0]=true;
@@ -19,8 +23,7 @@ bool InventorySystem::optimizeLootSplit(int n, vector<int>& coins) {
         }
     }
     return vec[n];
-
-    }
+}
 
 int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int>>& items) {
     InventoryPacker packer = InventoryPacker(capacity, items);
@@ -45,32 +48,4 @@ long long InventorySystem:: countStringPossibilities(string s) {
     }
 
     return dp[n];
-
-private:
-    
-
-}
-
-
-int main() {
-    InventorySystem system;
-    int size;
-    // cin>>size;
-    size=5;
-    // int vec[size];
-    vector<int>vec={5,1,11,5};
-
-    // for(int i=0;i<size;i++)cin>>vec[i];
-    int sum=0;
-    for(int x :vec)sum+=x;
-    if(sum%2==1)cout<<"No"<<endl;
-    else if(system.optimizeLootSplit(sum/2,vec)){
-        cout<<"yes"<<endl;
-    }
-    else{
-        cout<<"No"<<endl;
-    }
-    int output=system.countStringPossibilities("suuunn");
-    cout<<output<<endl;
-
 }

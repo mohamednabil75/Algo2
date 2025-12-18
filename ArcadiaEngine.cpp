@@ -75,6 +75,10 @@ public:
                //cout << "Player " << name << " inserted successfully :) at index " << index << endl;
                 return;
             }
+            if(arr[index].key == playerID){
+                arr[index].value = name ;
+                return;
+            }
         }
 
     }
@@ -721,11 +725,87 @@ string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int>>& roads) 
 // =========================================================
 
 int ServerKernel::minIntervals(vector<char>& tasks, int n) {
-    // TODO: Implement task scheduler with cooling time
-    // Same task must wait 'n' intervals before running again
-    // Return minimum total intervals needed (including idle time)
-    // Hint: Use greedy approach with frequency counting
-    return 0;
+    if (tasks.empty()) return 0;
+
+    vector<int> freq(26, 0);
+    for (char t : tasks) freq[t - 'A']++;
+
+    // Sort frequencies in descending order
+    sort(freq.begin(), freq.end(), greater<int>());
+
+    int maxFreq = freq[0];
+
+    // calculate idle slots needed for the most frequent task
+    int idleSlot = (maxFreq - 1) * n;
+
+    // Try to fill idle slots with the remaining tasks
+    for (int i = 1; i < 26; ++i) {
+        idleSlot -= min(freq[i], maxFreq - 1);
+    }
+
+    // If idleSlots becomes negative, it means we filled everything with tasks
+    idleSlot = max(0, idleSlot);
+
+    return tasks.size() + idleSlot;
+}
+
+void D_menu() {
+    while (true) {
+        cout << "\n=== Task Scheduler Menu ===\n";
+        cout << "1. Test custom tasks\n";
+        cout << "2. Exit\n";
+        cout << "Select an option: ";
+        int choice;
+        cin >> choice;
+        cin.ignore(); // flush newline
+
+        if (choice == 2) break;
+
+        if (choice == 1) {
+            string input;
+            cout << "Enter tasks (letters, case-insensitive, e.g., aAbB): ";
+            getline(cin, input);
+
+            // Validate length
+            if (input.length() < 1 || input.length() > 104) {
+                cout << "Invalid task length! Must be 1 <= tasks.length <= 104.\n";
+                continue;
+            }
+
+            // Convert all letters to uppercase
+            for (char &c : input) {
+                if (isalpha(c)) c = toupper(c);
+            }
+
+            // Validate letters only
+            bool valid = true;
+            for (char c : input) {
+                if (c < 'A' || c > 'Z') {
+                    valid = false;
+                    break;
+                }
+            }
+            if (!valid) {
+                cout << "Invalid tasks! All tasks must be letters.\n";
+                continue;
+            }
+
+            int n;
+            cout << "Enter cooldown n (0 <= n <= 100): ";
+            cin >> n;
+            cin.ignore();
+            if (n < 0 || n > 100) {
+                cout << "Invalid cooldown! Must be 0 <= n <= 100.\n";
+                continue;
+            }
+
+            vector<char> tasks(input.begin(), input.end());
+            int intervals = ServerKernel::minIntervals(tasks, n);
+            cout << "Minimum intervals needed: " << intervals << endl;
+        } else {
+            cout << "Invalid option. Try again.\n";
+        }
+    }
 }
 
 // =========================================================
@@ -749,6 +829,35 @@ extern "C" {
 
 int main()
 {
+
+
+
+    // TestRunner runner;
+
+
+    // struct TestCase {
+    //     vector<char> tasks;
+    //     int n;
+    //     int expected;
+    //     string name;
+    // };
+
+    // vector<TestCase> testCases = {
+    //     {{'A', 'A', 'A'}, 2, 4, "Test 1: {A,A,B}, n=2"},
+    //     {{'A','A','A','B','B','B'}, 2, 8, "Test 2: {A,A,A,B,B,B}, n=2"},
+    //     {{'A','A','A','B','B','B'}, 0, 6, "Test 3: {A,A,A,B,B,B}, n=0"},
+    //     {{'A','A','A','B','B','B','C','C'}, 2, 8, "Test 4: {A,A,A,B,B,B,C,C}, n=2"},
+    //     {{}, 2, 0, "Test 5: Empty tasks, n=2"}
+    // };
+
+    // for (auto& tc : testCases) {
+    //     int intervals = ServerKernel::minIntervals(tc.tasks, tc.n);
+    //     runner.runTest(tc.name, intervals, tc.expected);
+    // }
+
+    // runner.printSummary();
+    D_menu() ;
+
 //     ConcretePlayerTable p ;
 //     p.insert(11,"mosalah") ;
 //     p.insert(17 , "seif") ;
@@ -764,8 +873,10 @@ int main()
 //     p.insert(10 , "Mbappe") ;
 //     p.insert(100 , "mohamed") ;
 //     p.insert(99 , "mahmoud") ;
+//     p.insert(99 , "hakim") ;
 //     p.insert(88 , "sayed") ;
 //     p.insert(33 , "hady") ;
+//     p.insert(33 , "shady") ;
 //     cout << p.search(11) << endl;
 //     cout << p.search(17) << endl ;
 //     cout << p.search(2) << endl ;

@@ -43,6 +43,7 @@ FetchContent_MakeAvailable(googletest)
 add_executable(runTests
     src/IntventorySystem/InventoryPacker/InventoryPacker.test.cpp
     src/Navigator/TeleporterNetwork.test.cpp
+    src/Navigator/WorldNavigator.test.cpp
 )
 
 target_link_libraries(runTests

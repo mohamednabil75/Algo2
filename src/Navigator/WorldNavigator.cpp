@@ -40,46 +40,57 @@ bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, i
     return false;
 }
 
-long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate,
-                                       vector<vector<int>>& roadData) {
+long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate, vector<vector<int>>& roadData) 
+{
     vector<vector<pair<int, long long>>> adj(n);
     for (auto road : roadData)
     {
         int u = road[0];
         int v = road[1];
-        int goldCost = road[2];
-        int silverCost = road[3];
-        int totalCost = goldCost * goldRate + silverCost * silverRate;
+        long long goldCost = road[2];
+        long long silverCost = road[3];
+        long long totalCost = goldCost * goldRate + silverCost * silverRate;
         adj[u].push_back({v, totalCost});
         adj[v].push_back({u, totalCost});
     }
+
     vector<bool> inMST(n, false);
+    vector<long long> minEdge(n, LLONG_MAX);
+    minEdge[0] = 0;
+
     priority_queue<pair<long long, int>, vector<pair<long long, int>>, greater<>> pq;
+   
     pq.push({0, 0});
     long long MSTcost = 0;
-    int connected = 0;
 
     while (!pq.empty())
     {
         auto [cost, u] = pq.top();
         pq.pop();
+
+        if (cost > minEdge[u])
+            continue;
         if (inMST[u])
             continue;
+
         inMST[u] = true;
         MSTcost += cost;
-        connected++;
+
         for (auto [v, edgeCost] : adj[u])
         {
-            if (!inMST[v])
+            if (!inMST[v] && edgeCost < minEdge[v])
             {
+                minEdge[v] = edgeCost;
                 pq.push({edgeCost, v});
             }
         }
     }
-    if (connected == n - 1)
-        return MSTcost;
 
-    return -1;
+    for (auto visited : inMST)
+        if (!visited)
+            return -1;
+
+    return MSTcost;
 }
 
 string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int>>& roads) {
